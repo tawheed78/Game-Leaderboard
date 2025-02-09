@@ -1,8 +1,8 @@
 """Initial migration
 
-Revision ID: ac58e7c0fdd4
+Revision ID: 7252f98c5366
 Revises: 
-Create Date: 2025-02-10 01:17:59.876876
+Create Date: 2025-02-10 02:26:31.399818
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'ac58e7c0fdd4'
+revision: str = '7252f98c5366'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -30,7 +30,7 @@ def upgrade() -> None:
     op.create_index(op.f('ix_games_id'), 'games', ['id'], unique=False)
     op.create_index(op.f('ix_games_title'), 'games', ['title'], unique=True)
     op.create_table('users',
-    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('username', sa.String(), nullable=True),
     sa.Column('email', sa.String(), nullable=True),
     sa.Column('password', sa.String(), nullable=True),
@@ -46,6 +46,7 @@ def upgrade() -> None:
     sa.Column('user_id', sa.Integer(), nullable=True),
     sa.Column('game_id', sa.Integer(), nullable=True),
     sa.Column('score', sa.Integer(), nullable=True),
+    sa.Column('rank', sa.Integer(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['game_id'], ['games.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),

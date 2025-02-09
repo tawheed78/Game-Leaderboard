@@ -3,18 +3,19 @@ from typing import List, Optional
 from datetime import datetime
 
 class UserBase(BaseModel):
-    id: int
     username: str
     email: str
     password: str
 
 class UserCreate(UserBase):
     created_at: datetime
+    updated_at: datetime
 
 class UserUpdate(UserBase):
     updated_at: datetime
 
 class User(UserBase):
+    id: int
     created_at: datetime
     updated_at: datetime
 

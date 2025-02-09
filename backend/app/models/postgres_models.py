@@ -10,12 +10,15 @@ class UserModel(Base):
     "User Model Class"
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
     username = Column(String, unique=True, index=True)
     email = Column(String, unique=True, index=True)
     password = Column(String)
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+    game_scores = relationship("GameScoreModel", back_populates="users")
+
 
 class GameModel(Base):
     "Game Model Class"
@@ -25,6 +28,8 @@ class GameModel(Base):
     title = Column(String, unique=True, index=True)
     description = Column(String)
     created_at = Column(DateTime, default=datetime.now)
+
+    game_scores = relationship("GameScoreModel", back_populates="games")
 
 class GameScoreModel(Base):
     "Game Score Model Class"
@@ -37,5 +42,5 @@ class GameScoreModel(Base):
     rank = Column(Integer)
     created_at = Column(DateTime, default=datetime.now)
 
-    user = relationship("UserModel", back_populates="game_scores")
-    game = relationship("GameModel", back_populates="game_scores")
+    users = relationship("UserModel", back_populates="game_scores")
+    games = relationship("GameModel", back_populates="game_scores")
