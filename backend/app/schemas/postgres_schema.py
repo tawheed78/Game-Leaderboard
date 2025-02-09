@@ -36,9 +36,13 @@ class GameResponse(GameBase):
 
 
 class GameScoreBase(BaseModel):
-    id: int
     user_id: int
     game_id: int
     score: int
-    rank: int
     created_at: datetime
+
+class GameScoreCreate(GameScoreBase):
+    pass
+
+class GameScoreResponse(GameScoreBase):
+    id: int

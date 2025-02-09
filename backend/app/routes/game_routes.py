@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
 from ..models.postgres_models import GameModel
-from ..schemas.postgres_schema import GameBase, GameCreate, GameResponse
+from ..schemas.postgres_schema import GameCreate, GameResponse
 from ..configs.database.postgres_config import get_postgres_db
 
 router = APIRouter()
