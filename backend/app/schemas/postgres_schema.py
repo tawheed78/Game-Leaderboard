@@ -24,10 +24,15 @@ class User(UserBase):
 
 
 class GameBase(BaseModel):
-    id: int
     title: str
     description: str
     created_at: datetime
+
+class GameCreate(GameBase):
+    pass
+
+class GameResponse(GameBase):
+    id: int
 
 
 class GameScoreBase(BaseModel):

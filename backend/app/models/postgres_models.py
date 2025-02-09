@@ -24,7 +24,7 @@ class GameModel(Base):
     "Game Model Class"
     __tablename__ = "games"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
     title = Column(String, unique=True, index=True)
     description = Column(String)
     created_at = Column(DateTime, default=datetime.now)
@@ -35,7 +35,7 @@ class GameScoreModel(Base):
     "Game Score Model Class"
     __tablename__ = "game_scores"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
     user_id = Column(Integer, ForeignKey('users.id'))
     game_id = Column(Integer, ForeignKey('games.id'))
     score = Column(Integer)
