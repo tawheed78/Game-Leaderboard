@@ -34,6 +34,7 @@ class GameScoreModel(Base):
     user_id = Column(Integer, ForeignKey('users.id'))
     game_id = Column(Integer, ForeignKey('games.id'))
     score = Column(Integer)
+    rank = Column(Integer)
     created_at = Column(DateTime, default=datetime.now)
 
     user = relationship("UserModel", back_populates="game_scores")
