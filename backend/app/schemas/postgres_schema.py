@@ -46,3 +46,7 @@ class GameScoreCreate(GameScoreBase):
 
 class GameScoreResponse(GameScoreBase):
     id: int
+
+class LeaderboardResponse(BaseModel):
+    user_id: int
+    score: int

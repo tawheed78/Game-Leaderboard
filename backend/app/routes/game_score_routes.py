@@ -14,7 +14,7 @@ from ..utils.utils import add_game_score_to_redis
 router = APIRouter()
 
 @router.post("/scores", response_model=GameScoreResponse)
-async def create_game_score(score: GameScoreCreate, db: Session = Depends(get_postgres_db), redis: aioredis.Redis = Depends(get_redis_client),):
+async def create_game_score(score: GameScoreCreate, db: Session = Depends(get_postgres_db), redis: aioredis.Redis = Depends(get_redis_client)):
     try:
         if not db.query(UserModel).filter(UserModel.id == score.user_id).first():
             raise HTTPException(status_code=404, detail="User not found")
