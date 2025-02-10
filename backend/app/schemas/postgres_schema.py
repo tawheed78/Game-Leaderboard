@@ -33,19 +33,22 @@ class GameCreate(GameBase):
 
 class GameResponse(GameBase):
     id: int
+    upvotes: int
 
-
-class GameScoreBase(BaseModel):
+class GameSessionBase(BaseModel):
     user_id: int
     game_id: int
     score: int
-    created_at: datetime
+    start_time: datetime
 
-class GameScoreCreate(GameScoreBase):
+
+class GameSessionCreate(GameSessionBase):
     pass
 
-class GameScoreResponse(GameScoreBase):
+class GameSessionResponse(GameSessionCreate):
     id: int
+    game_status: str
+    end_time: Optional[datetime] = None
 
 class LeaderboardResponse(BaseModel):
     user_id: int

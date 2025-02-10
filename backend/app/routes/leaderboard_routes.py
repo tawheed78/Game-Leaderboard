@@ -16,6 +16,7 @@ async def get_global_leaderboard(redis: aioredis.Redis = Depends(get_redis_clien
     try:
         global_leaderboard = "global_leaderboard"
         leaderboard_data = await redis.zrevrange(global_leaderboard, 0, 9, withscores=True)
+        # await redis.zrem(global_leaderboard, "4")
         leaderboard = [{"user_id": user, "score": score} for user, score in leaderboard_data]
         return leaderboard
     except Exception as e:
@@ -28,6 +29,7 @@ async def get_game_leaderboard(game_id: int, db: Session = Depends(get_postgres_
         if not game:
             raise HTTPException(status_code=404, detail="Game not found")
         game_leaderboard = f"game_{game_id}_leaderboard"
+        # await redis.zrem(game_leaderboard, "40")
         leaderboard_data = await redis.zrevrange(game_leaderboard, 0, 50, withscores=True)
         leaderboard = [{"user_id": user, "score": score} for user, score in leaderboard_data]
         return leaderboard
