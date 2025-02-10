@@ -23,3 +23,16 @@ async def create_game(game: GameCreate, db: Session = Depends(get_postgres_db)):
         return db_game
     except SQLAlchemyError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    
+@router.post("/games/{game_id}/upvote", response_model=GameResponse)
+async def upvote_game(game_id: int, db: Session = Depends(get_postgres_db)):
+    try:
+        game = db.query(GameModel).filter(GameModel.id == game_id).first()
+        if not game:
+            raise HTTPException(status_code=404, detail="Game not found")
+        game.upvotes += 1
+        db.commit()
+        db.refresh(game)
+        return game
+    except SQLAlchemyError as e:
+        raise HTTPException(status_code=400, detail=str(e))
