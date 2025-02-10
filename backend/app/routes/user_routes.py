@@ -1,5 +1,5 @@
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -12,6 +12,9 @@ router = APIRouter()
 @router.post("/users", response_model=User)
 async def create_user(user: UserCreate, db: Session = Depends(get_postgres_db)):
     try:
+        existing_user = db.query(UserModel).filter(UserModel.email == user.email).first()
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Email already registered")
         db_user = UserModel(
             username=user.username,
             email=user.email,
@@ -24,7 +27,8 @@ async def create_user(user: UserCreate, db: Session = Depends(get_postgres_db)):
         db.refresh(db_user)
         return db_user
     except SQLAlchemyError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Database Error: {str(e)}")
     
 
 @router.put("/users/{user_id}", response_model=User)
@@ -33,15 +37,16 @@ async def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_
         db_user = db.query(UserModel).filter(UserModel.id == user_id).first()
         if db_user is None:
             raise HTTPException(status_code=404, detail="User not found")
-        db_user.username = user.username
-        db_user.email = user.email
-        db_user.password = user.password
+        db_user.username = user.username or db_user.username
+        db_user.email = user.email or db_user.email
+        db_user.password = user.password or db_user.password
         db_user.updated_at = datetime.now()
         db.commit()
         db.refresh(db_user)
         return db_user
     except SQLAlchemyError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Database Error: {str(e)}")
     
 @router.delete("users/{user_id}")
 async def delete_user(user_id: int, db: Session = Depends(get_postgres_db)):
@@ -53,4 +58,5 @@ async def delete_user(user_id: int, db: Session = Depends(get_postgres_db)):
         db.commit()
         return {"message": "User deleted successfully"}
     except SQLAlchemyError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Database Error: {str(e)}")

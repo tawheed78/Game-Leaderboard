@@ -30,7 +30,7 @@ def create_database_if_not_exists():
             ).fetchone()
             if not result:
                 conn.execute(text(f"CREATE DATABASE {DB_NAME}"))
-                conn.execute(text("COMMIT"))  # Commit the database creation
+                conn.execute(text("COMMIT"))
                 print(f"Database '{DB_NAME}' created successfully.")
             else:
                 print(f"Database '{DB_NAME}' already exists.")

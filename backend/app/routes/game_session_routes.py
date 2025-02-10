@@ -20,8 +20,7 @@ async def create_game_session(session: GameSessionCreate, db: Session = Depends(
             raise HTTPException(status_code=404, detail="User not found")
         if not db.query(GameModel).filter(GameModel.id == session.game_id).first():
             raise HTTPException(status_code=404, detail="Game not found")
-        global_leaderboard = "global_leaderboard"
-        game_leaderboard = f"game_{session.game_id}_leaderboard"
+        
         db_score = GameSessionModel(
             user_id=session.user_id,
             game_id=session.game_id,
@@ -32,11 +31,18 @@ async def create_game_session(session: GameSessionCreate, db: Session = Depends(
         db.commit()
         db.refresh(db_score)
         end_of_current_month = get_end_of_month_timestamp()
-        await add_game_score_to_redis(global_leaderboard, session.user_id, session.score, ex=end_of_current_month)
-        await add_game_score_to_redis(game_leaderboard, session.user_id, session.score, ex= end_of_current_month)
+        try:
+            global_leaderboard = "global_leaderboard"
+            game_leaderboard = f"game_{session.game_id}_leaderboard"
+            await add_game_score_to_redis(global_leaderboard, session.user_id, session.score, ex=end_of_current_month)
+            await add_game_score_to_redis(game_leaderboard, session.user_id, session.score, ex= end_of_current_month)
+        except Exception as redis_error:
+            raise HTTPException(status_code=500, detail=f"Redis error: {redis_error}")
         return db_score
     except SQLAlchemyError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=f"Database error: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
     
 
 @router.put("/scores/{game_session_id}", response_model=GameSessionResponse)
@@ -52,4 +58,6 @@ async def update_game_session(game_session_id: int, db: Session = Depends(get_po
         return game_session
     except SQLAlchemyError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
     

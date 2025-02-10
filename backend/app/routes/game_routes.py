@@ -7,7 +7,6 @@ from sqlalchemy.exc import SQLAlchemyError
 from ..models.postgres_models import GameModel, GameSessionModel
 from ..schemas.postgres_schema import GameCreate, GameResponse
 from ..configs.database.postgres_config import get_postgres_db
-from ..utils.utils import get_end_of_month_timestamp
 
 router = APIRouter()
 
@@ -46,6 +45,10 @@ async def get_popularity_index(game_id: int, db: Session = Depends(get_postgres_
         yesterday_start = datetime.now().date() - timedelta(days=1)
         yesterday_end = yesterday_start + timedelta(days=1)
         
+        game = db.query(GameModel).filter(GameModel.id == game_id)
+        if not game:
+            raise HTTPException(status_code=404, detail="Game not found")
+        
         w1 = db.query(GameSessionModel.user_id).filter(
             GameSessionModel.game_id == game_id, 
             GameSessionModel.start_time >= yesterday_start,
@@ -79,13 +82,13 @@ async def get_popularity_index(game_id: int, db: Session = Depends(get_postgres_
         max_daily_players = db.query(GameSessionModel.user_id).filter( 
             GameSessionModel.start_time >= yesterday_start,
             GameSessionModel.start_time < yesterday_end
-        ).distinct().count()
+        ).distinct().count() or 1
         
         max_concurrent_players = db.query(GameSessionModel).filter(
             GameSessionModel.game_status == "STARTED"
-        ).distinct().count()
+        ).distinct().count() or 1
         
-        max_upvotes = db.query(func.max(GameModel.upvotes)).scalar()
+        max_upvotes = db.query(func.max(GameModel.upvotes)).scalar() or 1
         
         max_session_length_hours = (db.query(func.max(GameSessionModel.end_time - GameSessionModel.start_time))
         .filter(
@@ -93,14 +96,14 @@ async def get_popularity_index(game_id: int, db: Session = Depends(get_postgres_
             GameSessionModel.end_time < yesterday_end,
             GameSessionModel.end_time.isnot(None)
         ).scalar())
-        max_session_length = max_session_length_hours.total_seconds() if max_session_length_hours else 0
+        max_session_length = max_session_length_hours.total_seconds() if max_session_length_hours else 1
 
         max_daily_sessions = (db.query(GameSessionModel.end_time - GameSessionModel.start_time)
         .filter(
             GameSessionModel.start_time >= yesterday_start,
             GameSessionModel.end_time < yesterday_end,
             GameSessionModel.end_time.isnot(None)
-        ).count())
+        ).count()) or 1
         
         popularity_index =  (0.3 * (w1/max_daily_players) + 
          0.2 * (w2/max_concurrent_players) + 
@@ -108,6 +111,8 @@ async def get_popularity_index(game_id: int, db: Session = Depends(get_postgres_
          0.15 * (w4/max_session_length) + 
          0.1 * (w5/max_daily_sessions))
 
-        return round(popularity_index,2)
+        return {"game_id": game_id, "popularity_index": round(popularity_index, 2)}
     except SQLAlchemyError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Unexpected error: " + str(e))
