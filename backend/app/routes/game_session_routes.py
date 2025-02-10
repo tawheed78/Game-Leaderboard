@@ -1,7 +1,6 @@
-import random
+
 import redis.asyncio as aioredis # type: ignore
 
-from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
@@ -10,7 +9,6 @@ from ..models.postgres_models import GameSessionModel, UserModel, GameModel, Gam
 from ..schemas.postgres_schema import GameSessionResponse
 from ..configs.database.postgres_config import get_postgres_db
 from ..configs.redis.redis import get_redis_client
-from ..utils.utils import add_game_score_to_redis, get_end_of_month_timestamp
 from ..services.game_session_service import create_game_session_service, update_game_session_service
 
 router = APIRouter()
