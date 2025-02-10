@@ -11,11 +11,12 @@ load_dotenv(dotenv_path="app/.env")
 
 # Load environment variables
 POSTGRES_URL = os.getenv('POSTGRES_URL',"sqlite:///./test.db")
+POSTGRES_URL_RDS = os.getenv('POSTGRES_URL_RDS',"sqlite:///./test.db")
 DB_NAME = os.getenv('POSTGRES_DB')
 
 # Create engine without specifying the database name (for creating the database if not exists)
-engine_without_db = create_engine(POSTGRES_URL.rsplit('/', 1)[0])
-engine = create_engine(POSTGRES_URL)
+engine_without_db = create_engine(POSTGRES_URL_RDS.rsplit('/', 1)[0])
+engine = create_engine(POSTGRES_URL_RDS)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
