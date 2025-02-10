@@ -4,8 +4,8 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
-from ..models.postgres_models import GameModel, GameSessionModel
-from ..schemas.postgres_schema import GameCreate, GameResponse
+from ..models.postgres_models import GameModel, GameSessionModel, GameStatusModel, UserModel
+from ..schemas.postgres_schema import GameCreate, GameResponse, GameStatusResponse
 from ..configs.database.postgres_config import get_postgres_db
 
 router = APIRouter()
@@ -25,6 +25,57 @@ async def create_game(game: GameCreate, db: Session = Depends(get_postgres_db)):
     except SQLAlchemyError as e:
         raise HTTPException(status_code=400, detail=str(e))
     
+@router.post("/games/{game_id}/start", response_model=GameStatusResponse)
+async def start_game(game_id: int, db: Session = Depends(get_postgres_db)):
+    try:
+        game = db.query(GameModel).filter(GameModel.id == game_id).first()
+        if not game:
+            raise HTTPException(status_code=404, detail="Game not found")
+        game_is_active = db.query(GameStatusModel).filter(
+            GameStatusModel.game_id == game_id,
+            GameStatusModel.status == "STARTED"
+        ).first()
+        if game_is_active:
+            raise HTTPException(status_code=404, detail="Game has started already.")
+        db_game = GameStatusModel(
+            game_id = game_id
+        )
+        db.add(db_game)
+        db.commit()
+        db.refresh(db_game)
+        
+        return db_game
+    except SQLAlchemyError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.post("/games/{game_id}/end", response_model=GameStatusResponse)
+async def end_game(game_id: int, db: Session = Depends(get_postgres_db)):
+    try:
+        game = db.query(GameModel).filter(GameModel.id == game_id).first()
+        if not game:
+            raise HTTPException(status_code=404, detail="Game not found")
+        db_game = db.query(GameStatusModel).filter(GameStatusModel.game_id == game_id, GameStatusModel.status == "STARTED").first()
+        if not db_game:
+            raise HTTPException(status_code=404, detail="The game has ended.")
+        db_game.status = "ENDED"
+        db_game.ended_at = datetime.now()
+        db.commit()
+        db.refresh(db_game)
+        return db_game
+    except SQLAlchemyError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    
+# @router.post("games/{game_id}/join")
+# async def join_game(game_id: int, user_id: int, db: Session = Depends(get_postgres_db)):
+#     try:
+#         game = db.query(GameModel).filter(GameModel.id == game_id).first()
+#         if not game:
+#             raise HTTPException(status_code=404, detail="Game not found")
+#         user = db.query(UserModel).filter(UserModel.id == user_id).first()
+#         if not user:
+#             raise HTTPException(status_code=404, detail="User not found")
+        
+
 @router.post("/games/{game_id}/upvote", response_model=GameResponse)
 async def upvote_game(game_id: int, db: Session = Depends(get_postgres_db)):
     try:

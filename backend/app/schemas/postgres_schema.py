@@ -50,6 +50,16 @@ class GameSessionResponse(GameSessionCreate):
     start_time: datetime
     end_time: Optional[datetime] = None
 
+class GameStatusBase(BaseModel):
+    game_id: int
+
+class GameStatusResponse(GameStatusBase):
+    id: int
+    started_at: datetime
+    ended_at: Optional[datetime] = None
+    number_of_users_joined: int
+    status: str
+
 class LeaderboardResponse(BaseModel):
     user_id: int
     score: int
