@@ -1,10 +1,8 @@
 from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import func
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import SQLAlchemyError
 
-from ..models.postgres_models import GameModel, GameSessionModel, GameStatusModel, UserModel
+from ..models.postgres_models import GameModel, GameStatusModel
 from ..schemas.postgres_schema import GameCreate, GameResponse, GameStatusResponse
 from ..services.game_service import create_game_service, start_game_service, end_game_service, upvote_game_service, popularity_index_service
 from ..configs.database.postgres_config import get_postgres_db
