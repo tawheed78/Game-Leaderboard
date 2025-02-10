@@ -12,6 +12,8 @@ app.include_router(game_router, prefix="/api/v1")
 app.include_router(game_session_router, prefix="/api/v1")
 app.include_router(leaderboard_router, prefix="/api/v1")
 
+
+
 @app.get("/")
 async def root():
     return {"message": "Welcome to ..."}

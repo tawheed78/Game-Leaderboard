@@ -9,7 +9,7 @@ from ..models.postgres_models import GameSessionModel, UserModel, GameModel
 from ..schemas.postgres_schema import GameSessionResponse, GameSessionCreate
 from ..configs.database.postgres_config import get_postgres_db
 from ..configs.redis.redis import get_redis_client
-from ..utils.utils import add_game_score_to_redis
+from ..utils.utils import add_game_score_to_redis, get_end_of_month_timestamp
 
 router = APIRouter()
 
@@ -31,8 +31,9 @@ async def create_game_session(session: GameSessionCreate, db: Session = Depends(
         db.add(db_score)
         db.commit()
         db.refresh(db_score)
-        await add_game_score_to_redis(global_leaderboard, session.user_id, session.score)
-        await add_game_score_to_redis(game_leaderboard, session.user_id, session.score)
+        end_of_current_month = get_end_of_month_timestamp()
+        await add_game_score_to_redis(global_leaderboard, session.user_id, session.score, ex=end_of_current_month)
+        await add_game_score_to_redis(game_leaderboard, session.user_id, session.score, ex= end_of_current_month)
         return db_score
     except SQLAlchemyError as e:
         raise HTTPException(status_code=400, detail=str(e))

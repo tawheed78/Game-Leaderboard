@@ -39,7 +39,6 @@ class GameSessionBase(BaseModel):
     user_id: int
     game_id: int
     score: int
-    start_time: datetime
 
 
 class GameSessionCreate(GameSessionBase):
@@ -48,6 +47,7 @@ class GameSessionCreate(GameSessionBase):
 class GameSessionResponse(GameSessionCreate):
     id: int
     game_status: str
+    start_time: datetime
     end_time: Optional[datetime] = None
 
 class LeaderboardResponse(BaseModel):
