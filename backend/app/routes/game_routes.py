@@ -58,11 +58,7 @@ async def upvote_game(game_id: int, db: Session = Depends(get_postgres_db)):
 @router.get("/games/popularity-index")
 async def popularity_index(redis: aioredis.Redis = Depends(get_redis_client)):
     popularity_index_key = "popularity_index"
-    popularity_index_data = await redis.zrevrange(popularity_index_key, 0, 9, withscores=True)
+    popularity_index_data = await redis.zrevrange(popularity_index_key, 0, 4, withscores=True)
     if popularity_index_data:
         return popularity_index_data
     raise HTTPException(status_code=404, detail="Popularity index not available yet. Try again in a few minutes.")
-
-# scheduler = AsyncIOScheduler()
-# scheduler.add_job(get_game_popularity_index, "interval", minutes=1)
-# scheduler.start()
