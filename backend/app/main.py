@@ -21,7 +21,7 @@ scheduler = AsyncIOScheduler()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Handle startup and shutdown of scheduler to fetch latest popularity index from server."""
-    scheduler.add_job(get_game_popularity_index, "interval", minutes=1)
+    scheduler.add_job(get_game_popularity_index, "interval", minutes=5)
     scheduler.start()
     print("Scheduler started ✅")
     yield
