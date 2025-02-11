@@ -24,10 +24,15 @@ async def create_game_session_service(user_id: int, game_id: int, game_activity_
         db.refresh(db_game_Session)
 
         try:
+            today_date = datetime.today().date()
             global_leaderboard = "global_leaderboard"
             game_leaderboard = f"game_{game_id}_leaderboard"
+            global_leaderboard_date = f"global_leaderboard_{today_date}"
+            game_leaderboard_date = f"game_{game_id}_leaderboard_{today_date}"
             await add_game_score_to_redis(global_leaderboard, user_id, game_score)
             await add_game_score_to_redis(game_leaderboard, user_id, game_score)
+            await add_game_score_to_redis(global_leaderboard_date, user_id, game_score)
+            await add_game_score_to_redis(game_leaderboard_date, user_id, game_score)
         except Exception as redis_error:
             raise HTTPException(status_code=500, detail=f"Redis error: {redis_error}")
         return db_game_Session
