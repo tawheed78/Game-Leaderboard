@@ -8,7 +8,8 @@ import redis.asyncio as aioredis # type: ignore
 
 load_dotenv()
 
-host = 'redis://redis:6379'
+# host = 'redis://redis:6379'
+host = 'redis://localhost:6380'
 
 "Create Redis connection pool"
 redis_client = aioredis.from_url(

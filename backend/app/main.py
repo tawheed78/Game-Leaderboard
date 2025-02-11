@@ -1,12 +1,13 @@
 from fastapi import FastAPI
 from apscheduler.schedulers.asyncio import AsyncIOScheduler # type: ignore
 from contextlib import asynccontextmanager
-from app.utils.utils import get_game_popularity_index
+
 
 from app.routes.user_routes import router as user_router
 from app.routes.game_routes import router as game_router
 from app.routes.game_session_routes import router as game_session_router
 from app.routes.leaderboard_routes import router as leaderboard_router
+from app.utils.utils import get_game_popularity_index
 
 app = FastAPI()
 
@@ -20,7 +21,7 @@ scheduler = AsyncIOScheduler()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Handle startup and shutdown of scheduler to fetch latest popularity index from server."""
-    scheduler.add_job(get_game_popularity_index, "interval", minutes=5)
+    scheduler.add_job(get_game_popularity_index, "interval", minutes=1)
     scheduler.start()
     print("Scheduler started ✅")
     yield
