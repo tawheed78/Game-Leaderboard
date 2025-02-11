@@ -1,4 +1,4 @@
-﻿# Lead-Management-System
+﻿# Game Leaderboard
 
 
 ## Overview
