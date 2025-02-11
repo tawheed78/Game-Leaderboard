@@ -1,4 +1,6 @@
 
+from datetime import datetime, timedelta
+from ..utils.utils import has_played_today
 import redis.asyncio as aioredis # type: ignore
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -16,6 +18,7 @@ router = APIRouter()
 @router.post("/games/{game_id}/join", response_model=GameSessionResponse)
 async def join_game(game_id: int, user_id: int, db: Session = Depends(get_postgres_db), redis: aioredis.Redis = Depends(get_redis_client)):
     try:
+        todays_session = False
         if not db.query(UserModel).filter(UserModel.id == user_id).first():
             raise HTTPException(status_code=404, detail="User not found")
         if not db.query(GameModel).filter(GameModel.id == game_id).first():
@@ -26,7 +29,6 @@ async def join_game(game_id: int, user_id: int, db: Session = Depends(get_postgr
             GameStatusModel.status == "STARTED").first()
         if not game_activity_status:
             raise HTTPException(status_code=404, detail="Game has ended.")
-        
         if db.query(GameSessionModel).filter(
             GameSessionModel.game_id == game_id,
             GameSessionModel.user_id == user_id,

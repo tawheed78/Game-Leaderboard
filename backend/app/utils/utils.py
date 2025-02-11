@@ -1,12 +1,32 @@
 import asyncio
 import calendar
 
+from fastapi import HTTPException
+
 from ..services.game_service import popularity_index_service
-from ..models.postgres_models import GameModel
+from ..models.postgres_models import GameModel, GameSessionModel
 from ..configs.database.postgres_config import SessionLocal
 import redis.asyncio as aioredis # type: ignore
 from datetime import datetime, timedelta
 from ..configs.redis.redis import get_redis_client
+
+
+async def has_played_today(user_id, game_id, db):
+    try:
+        today_start = datetime.now().date()
+        today_end = today_start + timedelta(days=1)
+        todays_session = db.query(GameSessionModel).filter(
+            GameSessionModel.user_id == user_id,
+            GameSessionModel.game_id == game_id,
+            GameSessionModel.start_time >= today_start,
+            GameSessionModel.start_time <= today_end
+        ).first()
+        if todays_session:
+            return True
+        else:
+            return False
+    except Exception as redis_error:
+        raise HTTPException(status_code=500, detail=f"Redis error: {redis_error}")    
 
 
 async def get_game_popularity_index():

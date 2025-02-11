@@ -5,20 +5,23 @@ import random
 from fastapi import HTTPException
 from sqlalchemy.exc import SQLAlchemyError
 
-from ..utils.utils import add_game_score_to_redis
+from ..utils.utils import add_game_score_to_redis, has_played_today
 from ..models.postgres_models import GameSessionModel
 
 
 async def create_game_session_service(user_id: int, game_id: int, game_activity_status, db):
     try:
         game_score = random.choice(range(0, 101, 5))
+        
         db_game_Session = GameSessionModel(
             user_id=user_id,
             game_id=game_id,
             score=game_score,
             start_time=datetime.now()
         )
-        game_activity_status.number_of_users_joined += 1
+        user_played_today = await has_played_today(user_id, game_id, db)
+        if not user_played_today:
+            game_activity_status.number_of_users_joined += 1
         db.add(db_game_Session)
         db.commit()
         db.refresh(db_game_Session)
