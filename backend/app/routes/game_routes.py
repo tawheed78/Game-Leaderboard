@@ -64,34 +64,34 @@ async def popularity_index(redis: aioredis.Redis = Depends(get_redis_client)):
     raise HTTPException(status_code=404, detail="Popularity index not available yet. Try again in a few minutes.")
 
 
-async def get_game_popularity_index():
-    db = SessionLocal()
-    redis = await get_redis_client()
-    try:
-        yesterday_start = datetime.now().date() - timedelta(days=1)
-        yesterday_end = yesterday_start + timedelta(days=1)
+# async def get_game_popularity_index():
+#     db = SessionLocal()
+#     redis = await get_redis_client()
+#     try:
+#         yesterday_start = datetime.now().date() - timedelta(days=1)
+#         yesterday_end = yesterday_start + timedelta(days=1)
         
-        game_ids = [game.id for game in db.query(GameModel.id).all()]
-        cache_key = "popularity_index"
-        tasks = [
-            popularity_index_service(game_id, yesterday_start, yesterday_end, db)
-            for game_id in game_ids
-        ]
-        popularity_list = await asyncio.gather(*tasks)
+#         game_ids = [game.id for game in db.query(GameModel.id).all()]
+#         cache_key = "popularity_index"
+#         tasks = [
+#             popularity_index_service(game_id, yesterday_start, yesterday_end, db)
+#             for game_id in game_ids
+#         ]
+#         popularity_list = await asyncio.gather(*tasks)
 
-        async with redis.pipeline() as pipe:
-            pipe.delete(cache_key)
-            for item in popularity_list:
-                game_id = item.get('game_id')
-                score = item.get("popularity_index")
-                pipe.zadd(cache_key, {str(game_id):float(score)})
-            await pipe.execute()
-        print("🔄 Popularity index updated for all games!")
-    except Exception as e:
-        print(f"⚠️ Error in popularity index update: {str(e)}")
-    finally:
-        db.close()
+#         async with redis.pipeline() as pipe:
+#             pipe.delete(cache_key)
+#             for item in popularity_list:
+#                 game_id = item.get('game_id')
+#                 score = item.get("popularity_index")
+#                 pipe.zadd(cache_key, {str(game_id):float(score)})
+#             await pipe.execute()
+#         print("🔄 Popularity index updated for all games!")
+#     except Exception as e:
+#         print(f"⚠️ Error in popularity index update: {str(e)}")
+#     finally:
+#         db.close()
 
-scheduler = AsyncIOScheduler()
-scheduler.add_job(get_game_popularity_index, "interval", minutes=5)
-scheduler.start()
+# scheduler = AsyncIOScheduler()
+# scheduler.add_job(get_game_popularity_index, "interval", minutes=5)
+# scheduler.start()
