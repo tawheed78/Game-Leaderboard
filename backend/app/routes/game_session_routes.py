@@ -1,24 +1,30 @@
+"""Routing Module for Game Sessions including Join and Exit a Game"""
 
-from datetime import datetime, timedelta
-from ..utils.utils import has_played_today
 import redis.asyncio as aioredis # type: ignore
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
-from ..models.postgres_models import GameSessionModel, UserModel, GameModel, GameStatusModel
-from ..schemas.postgres_schema import GameSessionResponse
 from ..configs.database.postgres_config import get_postgres_db
 from ..configs.redis.redis import get_redis_client
+from ..models.postgres_models import GameSessionModel, UserModel, GameModel, GameStatusModel
+from ..schemas.postgres_schema import GameSessionResponse
 from ..services.game_session_service import create_game_session_service, update_game_session_service
+
 
 router = APIRouter()
 
+
 @router.post("/games/{game_id}/join", response_model=GameSessionResponse)
-async def join_game(game_id: int, user_id: int, db: Session = Depends(get_postgres_db), redis: aioredis.Redis = Depends(get_redis_client)):
+async def join_game(
+    game_id: int, 
+    user_id: int, 
+    db: Session = Depends(get_postgres_db), 
+    redis: aioredis.Redis = Depends(get_redis_client)
+    ):
+    """Routing Module to Join an active Game"""
     try:
-        todays_session = False
         if not db.query(UserModel).filter(UserModel.id == user_id).first():
             raise HTTPException(status_code=404, detail="User not found")
         if not db.query(GameModel).filter(GameModel.id == game_id).first():
@@ -29,6 +35,7 @@ async def join_game(game_id: int, user_id: int, db: Session = Depends(get_postgr
             GameStatusModel.status == "STARTED").first()
         if not game_activity_status:
             raise HTTPException(status_code=404, detail="Game has ended.")
+        
         if db.query(GameSessionModel).filter(
             GameSessionModel.game_id == game_id,
             GameSessionModel.user_id == user_id,
@@ -44,7 +51,13 @@ async def join_game(game_id: int, user_id: int, db: Session = Depends(get_postgr
     
 
 @router.put("/games/{game_id}/exit", response_model=GameSessionResponse)
-async def exit_game(game_id: int, user_id: int, db: Session = Depends(get_postgres_db), redis: aioredis.Redis = Depends(get_redis_client)):
+async def exit_game(
+    game_id: int, 
+    user_id: int, 
+    db: Session = Depends(get_postgres_db), 
+    redis: aioredis.Redis = Depends(get_redis_client)
+    ):
+    """Routing Module to Exit a Game"""
     try:
         game_session = db.query(GameSessionModel).filter(
             GameSessionModel.game_id == game_id,
@@ -54,9 +67,8 @@ async def exit_game(game_id: int, user_id: int, db: Session = Depends(get_postgr
         if not game_session:
             raise HTTPException(status_code=404, detail="Game session not found")
     except SQLAlchemyError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=f"Database Error: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
     response = await update_game_session_service(game_session, db)
     return response
-    

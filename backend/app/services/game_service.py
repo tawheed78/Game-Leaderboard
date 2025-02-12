@@ -1,14 +1,16 @@
+"""Service Module for Game Routes"""
 
+from datetime import datetime
 from fastapi import HTTPException
 from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 
-from datetime import datetime
 from ..models.postgres_models import GameModel, GameSessionModel, GameStatusModel
 from ..schemas.postgres_schema import GameCreate
 
 
 async def create_game_service(game: GameCreate, db):
+    """Business Logic to Create a New Game"""
     try:
         db_game = GameModel(
             title=game.title,
@@ -25,6 +27,7 @@ async def create_game_service(game: GameCreate, db):
         raise HTTPException(status_code=500, detail="Unexpected error: " + str(e))
     
 async def start_game_service(game_id: int, db):
+    """Business Logic to Start a Game"""
     try:
         db_game = GameStatusModel(
             game_id = game_id
@@ -34,11 +37,13 @@ async def start_game_service(game_id: int, db):
         db.refresh(db_game)
         return db_game
     except SQLAlchemyError as e:
+        db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail="Unexpected error: " + str(e))
     
 async def end_game_service(db_game, db):
+    """Business Logic to End a Game"""
     try:
         db_game.status = "ENDED"
         db_game.ended_at = datetime.now()
@@ -46,23 +51,33 @@ async def end_game_service(db_game, db):
         db.refresh(db_game)
         return db_game
     except SQLAlchemyError as e:
+        db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail="Unexpected error: " + str(e))
     
 async def upvote_game_service(game, db):
+    """Business Logic to Upvote a Game"""
     try:
         game.upvotes += 1
         db.commit()
         db.refresh(game)
         return game
     except SQLAlchemyError as e:
+        db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail="Unexpected error: " + str(e))
     
 async def popularity_index_service(game_id, yesterday_start, yesterday_end, db):
+    """Business Logic to fetch the Popularity Index"""
     try:
+        # w1 - Number of players who played the Game Yesterday
+        # w2 - Number of people playing the game right now
+        # w3 - Total number of upvotes received for the game
+        # w4 - Maximum session length of the game played (considering only the sessions played yesterday)
+        # w5 - Total number of sessions played yesterday
+
         w1 = db.query(GameSessionModel.user_id).filter(
             GameSessionModel.game_id == game_id, 
             GameSessionModel.start_time >= yesterday_start,

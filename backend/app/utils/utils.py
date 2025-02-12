@@ -1,35 +1,16 @@
-import asyncio
-import calendar
+import asyncio, calendar
 
+from datetime import datetime, timedelta
 from fastapi import HTTPException
 
 from ..services.game_service import popularity_index_service
-from ..models.postgres_models import GameModel, GameSessionModel
+from ..models.postgres_models import GameModel
 from ..configs.database.postgres_config import SessionLocal
-import redis.asyncio as aioredis # type: ignore
-from datetime import datetime, timedelta
-from ..configs.redis.redis import get_redis_client
-
-
-async def has_played_today(user_id, game_id, db):
-    try:
-        today_start = datetime.now().date()
-        today_end = today_start + timedelta(days=1)
-        todays_session = db.query(GameSessionModel).filter(
-            GameSessionModel.user_id == user_id,
-            GameSessionModel.game_id == game_id,
-            GameSessionModel.start_time >= today_start,
-            GameSessionModel.start_time <= today_end
-        ).first()
-        if todays_session:
-            return True
-        else:
-            return False
-    except Exception as redis_error:
-        raise HTTPException(status_code=500, detail=f"Redis error: {redis_error}")    
+from ..configs.redis.redis import get_redis_client    
 
 
 async def get_game_popularity_index():
+    """Business logic to Update the Popularity Index"""
     db = SessionLocal()
     redis = await get_redis_client()
     try:
@@ -59,6 +40,7 @@ async def get_game_popularity_index():
 
 
 async def add_game_score_to_redis(sorted_set: str, user_id: int, score: int):
+    """Business Logic to Add score to Redis Sorted Sets"""
     redis = await get_redis_client()
     await redis.zincrby(sorted_set, score, user_id)
     ttl = await redis.ttl(sorted_set)
@@ -67,6 +49,7 @@ async def add_game_score_to_redis(sorted_set: str, user_id: int, score: int):
 
 
 def get_end_of_month_timestamp():
+    """Business Logic to Fetch end of month timestamp"""
     now = datetime.now()
     last_day = calendar.monthrange(now.year, now.month)[1]
     end_of_month = datetime(now.year, now.month, last_day, 23, 59, 59)

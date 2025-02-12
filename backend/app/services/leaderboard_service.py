@@ -1,9 +1,11 @@
+"""Service Module for Leaderboard Routes"""
 
 from fastapi import HTTPException
 from redis.exceptions import RedisError # type: ignore
 from sqlalchemy.exc import SQLAlchemyError
 
 async def global_leaderboard_service(key, redis):
+    """Business Logic to Fetch Global Leaderboard"""
     try:
         global_leaderboard = key
         leaderboard_data = await redis.zrevrange(global_leaderboard, 0, 9, withscores=True)
@@ -18,6 +20,7 @@ async def global_leaderboard_service(key, redis):
     
 
 async def game_leaderboard_service(key, redis):
+    """Business Logic to fetch Game Leaderboard"""
     try:
         game_leaderboard = key
         leaderboard_data = await redis.zrevrange(game_leaderboard, 0, 50, withscores=True)

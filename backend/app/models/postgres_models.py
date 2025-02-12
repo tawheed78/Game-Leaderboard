@@ -54,7 +54,7 @@ class GameSessionModel(Base):
     games = relationship("GameModel", back_populates="game_session")
 
 class GameStatusModel(Base):
-    "Model to display the games that have been started and ended"
+    "Model to display the games that have been started and ended along with active status as well as number of users joined"
     __tablename__ = "games_status"
     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
     game_id = Column(Integer, ForeignKey('games.id'))

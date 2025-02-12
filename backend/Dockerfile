@@ -10,7 +10,7 @@ COPY requirements.txt /backend/
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the entire backend code into the container
+# Copy the backend code into the container
 COPY . /backend/
 
 # Set environment variables from the .env file

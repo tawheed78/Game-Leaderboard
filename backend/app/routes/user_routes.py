@@ -1,3 +1,5 @@
+"""Routing module for User Operations"""
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -6,10 +8,16 @@ from ..schemas.postgres_schema import UserCreate, UserUpdate, User
 from ..configs.database.postgres_config import get_postgres_db
 from ..services.user_service import user_create_service, user_update_service, user_delete_service
 
+
 router = APIRouter()
 
+
 @router.post("/users", response_model=User)
-async def create_user(user: UserCreate, db: Session = Depends(get_postgres_db)):
+async def create_user(
+    user: UserCreate, 
+    db: Session = Depends(get_postgres_db)
+    ):
+    """Route to create a new User"""
     existing_user = db.query(UserModel).filter(UserModel.email == user.email).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -18,7 +26,12 @@ async def create_user(user: UserCreate, db: Session = Depends(get_postgres_db)):
     
 
 @router.put("/users/{user_id}", response_model=User)
-async def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_postgres_db)):
+async def update_user(
+    user_id: int, 
+    user: UserUpdate, 
+    db: Session = Depends(get_postgres_db)
+    ):
+    """Route to Update an Existing User"""
     db_user = db.query(UserModel).filter(UserModel.id == user_id).first()
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
@@ -27,7 +40,11 @@ async def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_
     
 
 @router.delete("/users/{user_id}")
-async def delete_user(user_id: int, db: Session = Depends(get_postgres_db)):
+async def delete_user(
+    user_id: int, 
+    db: Session = Depends(get_postgres_db)
+    ):
+    """Route to Delete a User"""
     db_user = db.query(UserModel).filter(UserModel.id == user_id).first()
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
